@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: ./api
+      target: development
+    volumes:
+      - ./api:/josue/api/src/app
+      - /josue/api/src/app/node_modules/
+    command: npm run start:dev
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/database
+      NODE_ENV: development
+      JWT_SECRET: 12345678
+      PORT: 3000
+    ports:
+      - 3000:3000
+      - 9229:9229
+
+  spa:
+    build:
+      dockerfile: Dockerfile
+      context: ./spa
+      target: development
+    command: npm run start
+    volumes:
+      - ./spa:/josue/spa/src/app
+      - ./josue/spa/src/app/node_modules
+    ports:
+      - 4200:4200
+    links:
+      - api
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
+    ports:
+      - 5432:5432
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - 9000:80
